@@ -1,8 +1,10 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
+import bcrypt from 'bcryptjs';
 import validateUserRequest from '../middlewares/validateRequest';
-import authMiddleware from '../middlewares/auth';
+import encryptPasswordMiddleware from '../middlewares/encryptPassword';
+import apiKeyMiddleware from '../middlewares/apiKeyMiddleware';
 
 const usersRouter = express.Router();
 const usersFilePath = path.join(__dirname, '../data/users.json');
@@ -13,6 +15,7 @@ interface User {
   password: string;
 }
 
+// Read users from file
 const readUsersFromFile = (): User[] => {
   try {
     return JSON.parse(fs.readFileSync(usersFilePath, 'utf8'));
@@ -21,15 +24,16 @@ const readUsersFromFile = (): User[] => {
   }
 };
 
+// Write users to file
 const writeUsersToFile = (users: User[]) => {
   fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2), 'utf8');
 };
 
 /**
- * CREATE: POST /users
- * Uses validation middleware before handling the request.
+ * CREATE: POST /users (Protected with API Key)
+ * Uses encryption middleware before storing the password.
  */
-usersRouter.post('/', validateUserRequest, (req, res) => {
+usersRouter.post('/', apiKeyMiddleware, validateUserRequest, encryptPasswordMiddleware, (req, res) => {
   const { email, password } = req.body;
   const users = readUsersFromFile();
 
@@ -37,16 +41,29 @@ usersRouter.post('/', validateUserRequest, (req, res) => {
   users.push(newUser);
   writeUsersToFile(users);
 
-  res.status(201).json({ message: 'User created', user: newUser });
+  res.status(201).json({ message: 'User created', user: { id: newUser.id, email: newUser.email } });
 });
 
 /**
- * READ: GET /users
- * Requires authentication (API key) to access.
+ * UPDATE PASSWORD: PUT /users/:id (Protected with API Key)
+ * Uses encryption middleware to hash new passwords before storing.
  */
-usersRouter.get('/', authMiddleware, (req, res) => {
+usersRouter.put('/:id', apiKeyMiddleware, encryptPasswordMiddleware, (req: any, res:any) => {
+  const { id } = req.params;
+  const { email, password } = req.body;
   const users = readUsersFromFile();
-  res.json(users);
+
+  const userIndex = users.findIndex((user) => user.id === parseInt(id));
+
+  if (userIndex === -1) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  if (email) users[userIndex].email = email;
+  if (password) users[userIndex].password = password; // Password is already encrypted by middleware
+
+  writeUsersToFile(users);
+  res.json({ message: 'User updated successfully' });
 });
 
 export default usersRouter;
