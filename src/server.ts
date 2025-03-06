@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import { Pool } from 'pg';
 import todoRoutes from './routes/todos';
+import productRoutes from "./routes/productRoutes";
+
 
 dotenv.config();
 
@@ -15,6 +17,8 @@ const pool = new Pool({
   host: 'localhost',
   port: 5432,
   database: 'postgres',
+  user: 'myuser',
+  password: 'mypassword',
 });
 
 // Middleware to parse JSON requests
@@ -51,6 +55,8 @@ const encryptPassword = async (req: express.Request, res: express.Response, next
 // Routes
 app.use('/api/todos', authenticateAPIKey, todoRoutes);
 
+app.use("/products", productRoutes);
+
 // Error Handling Middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
@@ -61,9 +67,9 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 app.listen(PORT, async () => {
   try {
     await pool.query('SELECT 1'); // Test database connection
-    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
+    console.error('Database connection failed:', error);
   }
 });
 

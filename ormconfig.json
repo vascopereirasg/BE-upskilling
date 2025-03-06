@@ -1,0 +1,12 @@
+{
+    "type": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "username": "myuser",
+    "password": "mypassword",
+    "database": "products_db",
+    "entities": ["src/entities/*.ts"],
+    "migrations": ["src/migrations/*.ts"],
+    "synchronize": false,
+    "logging": true
+}
