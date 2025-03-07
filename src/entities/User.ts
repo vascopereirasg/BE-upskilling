@@ -1,26 +1,23 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm"
 import { Purchase } from "./Purchase"
 
-@Entity("products")
-export class Product {
+@Entity("users")
+export class User {
   @PrimaryGeneratedColumn()
   id!: number
 
+  @Column({ type: "varchar", length: 255, unique: true })
+  email!: string
+
   @Column({ type: "varchar", length: 255 })
+  password!: string
+
+  @Column({ type: "varchar", length: 255, nullable: true })
   name!: string
-
-  @Column({ type: "text", nullable: true })
-  description!: string
-
-  @Column({ type: "decimal", precision: 10, scale: 2 })
-  price!: number
-
-  @Column({ type: "int", default: 0 })
-  stock!: number
 
   @OneToMany(
     () => Purchase,
-    (purchase) => purchase.product,
+    (purchase) => purchase.user,
   )
   purchases!: Purchase[]
 
@@ -30,3 +27,4 @@ export class Product {
   @UpdateDateColumn()
   updatedAt!: Date
 }
+
