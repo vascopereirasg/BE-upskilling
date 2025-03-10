@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm"
-import { Purchase } from "./Purchase"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne } from "typeorm"
+import { Credentials } from "./Credentials"
 
 @Entity("users")
 export class User {
@@ -9,17 +9,14 @@ export class User {
   @Column({ type: "varchar", length: 255, unique: true })
   email!: string
 
-  @Column({ type: "varchar", length: 255 })
-  password!: string
-
   @Column({ type: "varchar", length: 255, nullable: true })
   name!: string
 
-  @OneToMany(
-    () => Purchase,
-    (purchase) => purchase.user,
+  @OneToOne(
+    () => Credentials,
+    (credentials) => credentials.user,
   )
-  purchases!: Purchase[]
+  credentials!: Credentials
 
   @CreateDateColumn()
   createdAt!: Date

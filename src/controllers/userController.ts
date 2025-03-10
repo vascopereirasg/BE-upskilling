@@ -1,12 +1,14 @@
 import type { Request, Response } from "express"
-import { AppDataSource } from "../database/data-source"
 import { User } from "../entities/User"
+import { Credentials } from "../entities/Credentials"
 import bcrypt from "bcryptjs"
+import { AppDataSource } from "../database/data-source"
 
-// Get repository for User entity
+// Get repositories
 const userRepository = AppDataSource.getRepository(User)
+const credentialsRepository = AppDataSource.getRepository(Credentials)
 
-// Create a new user
+// Create a new user with credentials
 export const createUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, name } = req.body
@@ -22,20 +24,39 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
 
-    // Create new user
-    const user = userRepository.create({
-      email,
-      password: hashedPassword,
-      name,
+    // Create new user and credentials in a transaction
+    await AppDataSource.transaction(async (transactionalEntityManager) => {
+      // Create and save user
+      const user = userRepository.create({
+        email,
+        name,
+      })
+
+      await transactionalEntityManager.save(user)
+
+      // Create and save credentials
+      const credentials = credentialsRepository.create({
+        userId: user.id,
+        password: hashedPassword,
+      })
+
+      await transactionalEntityManager.save(credentials)
     })
 
-    await userRepository.save(user)
+    // Fetch the created user (without password)
+    const createdUser = await userRepository.findOne({
+      where: { email },
+      relations: ["credentials"],
+    })
 
-    // Don't return the password in the response
-    const { password: _, ...userWithoutPassword } = user
+    // Remove password from response
+    // if (createdUser && createdUser.credentials && createdUser.credentials.password) {
+    //   delete createdUser.credentials.password
+    // }
+
     res.status(201).json({
       message: "User created successfully",
-      user: userWithoutPassword,
+      user: createdUser,
     })
   } catch (error) {
     console.error("Error creating user:", error)
@@ -47,7 +68,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 export const getUsers = async (_req: Request, res: Response): Promise<void> => {
   try {
     const users = await userRepository.find({
-      select: ["id", "email", "name", "createdAt", "updatedAt"], // Exclude password
+      select: ["id", "email", "name", "createdAt", "updatedAt"],
     })
     res.status(200).json(users)
   } catch (error) {
@@ -61,7 +82,7 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
   try {
     const user = await userRepository.findOne({
       where: { id: Number(req.params.id) },
-      select: ["id", "email", "name", "createdAt", "updatedAt"], // Exclude password
+      select: ["id", "email", "name", "createdAt", "updatedAt"],
     })
 
     if (!user) {
@@ -79,26 +100,49 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
 // Update a user
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const user = await userRepository.findOne({ where: { id: Number(req.params.id) } })
-    if (!user) {
-      res.status(404).json({ error: "User not found" })
-      return
-    }
+    const userId = Number(req.params.id)
+    const { email, name, password } = req.body
 
-    // If updating password, hash it
-    if (req.body.password) {
-      const salt = await bcrypt.genSalt(10)
-      req.body.password = await bcrypt.hash(req.body.password, salt)
-    }
+    // Start a transaction
+    await AppDataSource.transaction(async (transactionalEntityManager) => {
+      // Update user details
+      if (email || name) {
+        const user = await userRepository.findOne({ where: { id: userId } })
+        if (!user) {
+          res.status(404).json({ error: "User not found" })
+          return
+        }
 
-    userRepository.merge(user, req.body)
-    await userRepository.save(user)
+        if (email) user.email = email
+        if (name) user.name = name
 
-    // Don't return the password in the response
-    const { password: _, ...userWithoutPassword } = user
+        await transactionalEntityManager.save(user)
+      }
+
+      // Update password if provided
+      if (password) {
+        const credentials = await credentialsRepository.findOne({ where: { userId } })
+        if (!credentials) {
+          res.status(404).json({ error: "Credentials not found" })
+          return
+        }
+
+        const salt = await bcrypt.genSalt(10)
+        credentials.password = await bcrypt.hash(password, salt)
+
+        await transactionalEntityManager.save(credentials)
+      }
+    })
+
+    // Get updated user
+    const updatedUser = await userRepository.findOne({
+      where: { id: userId },
+      select: ["id", "email", "name", "createdAt", "updatedAt"],
+    })
+
     res.status(200).json({
       message: "User updated successfully",
-      user: userWithoutPassword,
+      user: updatedUser,
     })
   } catch (error) {
     console.error("Error updating user:", error)
@@ -117,37 +161,6 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     res.status(200).json({ message: "User deleted successfully" })
   } catch (error) {
     console.error("Error deleting user:", error)
-    res.status(500).json({ error: "Internal Server Error" })
-  }
-}
-
-// User login
-export const loginUser = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { email, password } = req.body
-
-    // Find user by email
-    const user = await userRepository.findOne({ where: { email } })
-    if (!user) {
-      res.status(401).json({ error: "Invalid credentials" })
-      return
-    }
-
-    // Compare passwords
-    const isPasswordValid = await bcrypt.compare(password, user.password)
-    if (!isPasswordValid) {
-      res.status(401).json({ error: "Invalid credentials" })
-      return
-    }
-
-    // Don't return the password in the response
-    const { password: _, ...userWithoutPassword } = user
-    res.status(200).json({
-      message: "Login successful",
-      user: userWithoutPassword,
-    })
-  } catch (error) {
-    console.error("Error during login:", error)
     res.status(500).json({ error: "Internal Server Error" })
   }
 }

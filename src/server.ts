@@ -2,19 +2,18 @@ import express from "express"
 import dotenv from "dotenv"
 import { Pool } from "pg"
 import todoRoutes from "./routes/todos"
-import productRoutes from "./routes/productRoutes"
 import userRoutes from "./routes/userRoutes"
-import purchaseRoutes from "./routes/purchaseRoutes"
-import { AppDataSource } from "./database/data-source"
+import authRoutes from "./routes/authRoutes"
 import errorHandler from "./middlewares/errorHandler"
 import loggerMiddleware from "./middlewares/logger"
+import { AppDataSource } from "./database/data-source"
 
 dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
-// PostgreSQL Database Connection (No Username/Password)
+// PostgreSQL Database Connection
 const pool = new Pool({
   host: process.env.DB_HOST || "localhost",
   port: Number(process.env.DB_PORT) || 5432,
@@ -40,9 +39,8 @@ app.use(loggerMiddleware)
 
 // Routes
 app.use("/api/todos", todoRoutes)
-app.use("/api/products", productRoutes)
 app.use("/api/users", userRoutes)
-app.use("/api/purchases", purchaseRoutes)
+app.use("/api/auth", authRoutes)
 
 // Error Handling Middleware
 app.use(errorHandler)
@@ -58,3 +56,4 @@ app.listen(PORT, async () => {
 })
 
 export { pool }
+
