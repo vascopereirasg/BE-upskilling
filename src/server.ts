@@ -4,9 +4,12 @@ import { Pool } from "pg"
 import todoRoutes from "./routes/todos"
 import userRoutes from "./routes/userRoutes"
 import authRoutes from "./routes/authRoutes"
+import studentRoutes from "./routes/studentRoutes"
+import courseClassRoutes from "./routes/courseClassRoutes"
+import enrollmentRoutes from "./routes/enrollmentRoutes"
+import { AppDataSource } from "./database/data-source"
 import errorHandler from "./middlewares/errorHandler"
 import loggerMiddleware from "./middlewares/logger"
-import { AppDataSource } from "./database/data-source"
 
 dotenv.config()
 
@@ -41,6 +44,9 @@ app.use(loggerMiddleware)
 app.use("/api/todos", todoRoutes)
 app.use("/api/users", userRoutes)
 app.use("/api/auth", authRoutes)
+app.use("/api/students", studentRoutes)
+app.use("/api/course-classes", courseClassRoutes)
+app.use("/api/enrollments", enrollmentRoutes)
 
 // Error Handling Middleware
 app.use(errorHandler)
