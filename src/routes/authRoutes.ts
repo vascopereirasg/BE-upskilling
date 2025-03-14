@@ -1,14 +1,17 @@
 import { Router } from "express"
-import { loginUser, changePassword } from "../controllers/authController"
-import apiKeyMiddleware from "../middlewares/apiKeyMiddleware"
+import { loginUser, refreshToken, logout, changePassword, getCurrentUser } from "../controllers/authController"
+import { authenticateJWT } from "../middlewares/authMiddleware"
+import { authRateLimit } from "../middlewares/rateLimitMiddleware"
 
 const router = Router()
 
-// Login route (protected with API key)
-router.post("/login", apiKeyMiddleware, loginUser)
+// Public routes with rate limiting for security
+router.post("/login", authRateLimit, loginUser)
+router.post("/refresh-token", authRateLimit, refreshToken)
+router.post("/logout", logout)
 
-// Change password route (protected with API key)
-router.post("/change-password/:id", apiKeyMiddleware, changePassword)
+// Protected routes
+router.get("/me", authenticateJWT, getCurrentUser)
+router.post("/change-password", authenticateJWT, changePassword)
 
 export default router
-
