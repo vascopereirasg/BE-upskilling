@@ -41,7 +41,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Generate tokens - try the alternative implementation if the main one has issues
-    let accessToken, refreshToken
+    let accessToken: string, refreshToken: string
     try {
       // Try the main implementation first
       accessToken = generateAccessToken(user)

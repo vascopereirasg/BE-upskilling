@@ -1,20 +1,76 @@
-import { Router } from "express"
-import { createUser, getUsers, getUserById, updateUser, deleteUser } from "../controllers/userController"
-import { authenticateJWT } from "../middlewares/authMiddleware"
-import { rateLimit } from "../middlewares/rateLimitMiddleware"
+import express, { type Request, type Response } from "express"
+import fs from "fs"
+import path from "path"
+import validateUserRequest from "../middlewares/validateRequest"
+import encryptPasswordMiddleware from "../middlewares/encryptPassword"
+import apiKeyMiddleware from "../middlewares/apiKeyMiddleware"
 
-const router = Router()
+const usersRouter = express.Router()
+const usersFilePath = path.join(__dirname, "../data/users.json")
 
-// Apply rate limiting to all user routes
-router.use(rateLimit(60, 60 * 1000)) // 60 requests per minute
+interface User {
+  id: number
+  email: string
+  password: string
+}
 
-// All routes protected with JWT authentication
-router.use(authenticateJWT)
+// Read users from file
+const readUsersFromFile = (): User[] => {
+  try {
+    return JSON.parse(fs.readFileSync(usersFilePath, "utf8"))
+  } catch (error) {
+    return []
+  }
+}
 
-router.post("/", createUser)
-router.get("/", getUsers)
-router.get("/:id", getUserById)
-router.put("/:id", updateUser)
-router.delete("/:id", deleteUser)
+// Write users to file
+const writeUsersToFile = (users: User[]): void => {
+  fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2), "utf8")
+}
 
-export default router
+/**
+ * CREATE: POST /users (Protected with API Key)
+ * Uses encryption middleware before storing the password.
+ */
+usersRouter.post(
+  "/",
+  apiKeyMiddleware,
+  validateUserRequest,
+  encryptPasswordMiddleware,
+  (req: Request, res: Response): void => {
+    const { email, password } = req.body
+    const users = readUsersFromFile()
+
+    const newUser: User = { id: users.length + 1, email, password }
+    users.push(newUser)
+    writeUsersToFile(users)
+
+    res.status(201).json({ message: "User created", user: { id: newUser.id, email: newUser.email } })
+  },
+)
+
+/**
+ * UPDATE PASSWORD: PUT /users/:id (Protected with API Key)
+ * Uses encryption middleware to hash new passwords before storing.
+ */
+usersRouter.put("/:id", apiKeyMiddleware, encryptPasswordMiddleware, (req: Request, res: Response): void => {
+  const { id } = req.params
+  const { email, password } = req.body
+  const users = readUsersFromFile()
+
+  const userIndex = users.findIndex((user) => user.id === Number.parseInt(id))
+
+  if (userIndex === -1) {
+    res.status(404).json({ error: "User not found" })
+    return
+  }
+
+  if (email) users[userIndex].email = email
+  if (password) users[userIndex].password = password // Password is already encrypted by middleware
+
+  writeUsersToFile(users)
+  res.json({ message: "User updated successfully" })
+})
+
+export default usersRouter
+

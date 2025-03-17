@@ -1,4 +1,4 @@
-import express from "express"
+import express, { type Express } from "express"
 import dotenv from "dotenv"
 import { Pool } from "pg"
 import cors from "cors"
@@ -17,7 +17,7 @@ import { rateLimit } from "./middlewares/rateLimitMiddleware"
 // Load environment variables
 dotenv.config()
 
-const app = express()
+const app: Express = express()
 const PORT = process.env.PORT || 3000
 
 // PostgreSQL Database Connection
