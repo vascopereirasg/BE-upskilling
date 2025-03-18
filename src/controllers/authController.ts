@@ -7,8 +7,10 @@ import bcrypt from "bcryptjs"
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../config/jwt"
 import { jwtHelper } from "../utils/jwtHelper"
 
-// Import the extended Request type
-import "../types/express"
+// // Import the extended Request type
+// import "../types/express"
+// Import the extended Request type with file extension
+import "../types/express.d.ts"
 
 // Get repositories
 const userRepository = AppDataSource.getRepository(User)
