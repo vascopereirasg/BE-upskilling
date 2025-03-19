@@ -1,15 +1,11 @@
 import { Router } from "express"
 import { createUser, getUsers, getUserById, updateUser, deleteUser } from "../controllers/userController"
-import { authenticateJWT } from "../middlewares/authMiddleware"
-import { rateLimit } from "../middlewares/rateLimitMiddleware"
+import apiKeyMiddleware from "../middlewares/apiKeyMiddleware"
 
 const router = Router()
 
-// Apply rate limiting to all user routes
-router.use(rateLimit(60, 60 * 1000)) // 60 requests per minute
-
-// All routes protected with JWT authentication
-router.use(authenticateJWT)
+// All routes protected with API key
+router.use(apiKeyMiddleware)
 
 router.post("/", createUser)
 router.get("/", getUsers)
