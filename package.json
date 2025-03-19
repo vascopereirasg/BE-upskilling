@@ -9,7 +9,10 @@
     "build": "tsc",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "typeorm": "typeorm-ts-node-commonjs"
+    "typeorm": "typeorm-ts-node-commonjs",
+    "migration:generate": "tsx node_modules/typeorm/cli.js migration:generate -d src/database/data-source.ts",
+    "migration:run": "tsx node_modules/typeorm/cli.js migration:run -d src/database/data-source.ts",
+    "migration:revert": "tsx node_modules/typeorm/cli.js migration:revert -d src/database/data-source.ts"
   },
   "repository": "git+https://github.com/vascopereirasg/BE-upskilling.git",
   "keywords": [],

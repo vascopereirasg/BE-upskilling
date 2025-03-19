@@ -1,8 +1,8 @@
-import "reflect-metadata";
-import { DataSource } from "typeorm";
-import dotenv from "dotenv";
+import "reflect-metadata"
+import { DataSource } from "typeorm"
+import dotenv from "dotenv"
 
-dotenv.config();
+dotenv.config()
 
 // TypeORM Database Connection Configuration
 export const AppDataSource = new DataSource({
@@ -16,4 +16,4 @@ export const AppDataSource = new DataSource({
   migrations: ["src/migrations/*.ts"],
   synchronize: false, // Set to false to use migrations
   logging: true,
-});
+})
