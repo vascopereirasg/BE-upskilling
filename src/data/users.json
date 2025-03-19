@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "email": "test@example.com",
+    "password": "drowssapym"
+  },
+  {
+    "id": 2,
+    "email": "user@example.com",
+    "password": "$2b$10$Y/To3WpC1Kf0FMITTgJQmOguYObhVHJU66ZYrwL3vz2qLKLBIHHWu"
+  },
+  {
+    "id": 3,
+    "email": "user2@example.com",
+    "password": "mypassword2"
+  },
+  {
+    "id": 4,
+    "email": "test@vasco.com",
+    "password": "$2b$10$X6rYnFbfN7ovIvc.8TWNWulcdJqHX34Rp4EiNRnqWVBX..GvnYr2G"
+  }
+]
