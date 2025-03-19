@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "typeorm": "typeorm-ts-node-commonjs"
   },
   "repository": "git+https://github.com/vascopereirasg/BE-upskilling.git",
   "keywords": [],
@@ -21,13 +22,19 @@
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "pg": "^8.13.3",
+    "reflect-metadata": "^0.2.2",
+    "tsconfig-paths": "^4.2.0",
+    "ts-node-dev": "^2.0.0",
+    "typeorm": "^0.3.21"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.4",
+    "@types/pg": "^8.11.11",
     "eslint": "^9.20.1",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.3",
