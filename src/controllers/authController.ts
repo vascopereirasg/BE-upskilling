@@ -7,8 +7,10 @@ import bcrypt from "bcryptjs"
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../config/jwt"
 import { jwtHelper } from "../utils/jwtHelper"
 
-// Import the extended Request type
-import "../types/express"
+// // Import the extended Request type
+// import "../types/express"
+// Import the extended Request type with file extension
+import "../types/express.d.ts"
 
 // Get repositories
 const userRepository = AppDataSource.getRepository(User)
@@ -41,7 +43,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Generate tokens - try the alternative implementation if the main one has issues
-    let accessToken, refreshToken
+    let accessToken: string, refreshToken: string
     try {
       // Try the main implementation first
       accessToken = generateAccessToken(user)
